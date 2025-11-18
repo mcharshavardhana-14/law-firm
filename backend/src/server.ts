@@ -5,6 +5,7 @@ import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
+import http from 'http';
 import { sequelize, connectMongoDB, testDatabaseConnections } from './config/database';
 import { config } from './config';
 import logger from './utils/logger';
@@ -115,11 +116,15 @@ const startServer = async () => {
 
     // Start listening
     const PORT = config.port;
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${config.nodeEnv} mode`);
       console.log(`🚀 Server started at http://localhost:${PORT}`);
       console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
     });
+
+    // Initialize Socket.IO
+    const { initializeSocket } = await import('./services/notification.service');
+    initializeSocket(server);
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
